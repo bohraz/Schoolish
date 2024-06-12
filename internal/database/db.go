@@ -14,7 +14,7 @@ var (
 	err error
 
 	driverName string = "mysql"// database name
-	dataSourceName string = "root:root@(127.0.0.1:3306)/mysql?parseTime=true" // database connection link thingy (whats proper name?)
+	dataSourceName string = "root:root@(127.0.0.1:3306)/mysql?parseTime=true" // database connection
 )
 
 // Initializes the database connection
