@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"root/internal/auth"
 	"root/internal/database"
 )
 
@@ -27,16 +28,11 @@ func LoginSubmit(writer http.ResponseWriter, request *http.Request) {
 	}
 
 	username := request.FormValue("username")
-	password := request.FormValue("password")
+	passwordFromUser := request.FormValue("password")
 
-	// Proof of hashing capabilities, will fully implement when Sign Up page is complete
-	//hashedPassword, _ := auth.HashPassword(password)
-	//fmt.Println("Hashed password: ", hashedPassword)
+	passwordFromDb := database.CheckLoginInfo(username)
+	success := auth.CheckPasswordHash(passwordFromUser, passwordFromDb)
 
-	success := database.CheckLoginInfo(username, password)
-
-
-	// If username and Password succeeded, then echo user exists else redirect back to login
 	if success {
 		fmt.Fprint(writer, "That user exists!")
 	} else {
