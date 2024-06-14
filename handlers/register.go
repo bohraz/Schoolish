@@ -6,6 +6,7 @@ import (
 	"os"
 	"root/internal/auth"
 	"root/internal/database"
+	"root/internal/model"
 )
 
 // This handler serves the static html register file
@@ -28,13 +29,16 @@ func RegisterSubmit(writer http.ResponseWriter, request *http.Request) {
 		fmt.Print("Form failed to parse!", err)
 	}
 
-	username := request.FormValue("username")
-	password := request.FormValue("password")
-	email := request.FormValue("email")
-	firstName := request.FormValue("firstname")
-	lastName := request.FormValue("lastname")
 
-	if found, str := database.UserFound(username, email); found {
+	user := model.User{
+		Handle: request.FormValue("username"),
+		Email: request.FormValue("email"),
+		FirstName: request.FormValue("firstname"),
+		LastName: request.FormValue("lastname"),
+	}
+	password := request.FormValue("password")
+
+	if found, str := database.UserFound(user.Handle, user.Email); found {
 		fmt.Fprintf(writer, "A user with that %s already exists!", str)
 		return
 	}
@@ -44,8 +48,24 @@ func RegisterSubmit(writer http.ResponseWriter, request *http.Request) {
 		fmt.Println("There was an error hashing the password!", err)
 	}
 
-	accepted := database.CreateUser(username, email, password, firstName, lastName)
-	if accepted {
-		fmt.Printf("The user %v has been registered!", username)
+	userId, err := database.CreateUser(user.Handle, user.Email, password, user.FirstName, user.LastName)
+	if err != nil {
+		return
+	} else {
+		user.Id = userId
+
+		session, err := auth.SESSION_STORE.Get(request, "auth-session")
+		if err != nil {
+			fmt.Println("There was an error getting the session!", err)
+		}
+
+		session.Values["user"] = user
+		session.Values["authenticated"] = true
+		err = session.Save(request, writer)
+		if err != nil {
+			fmt.Fprint(writer, "There was an error: ", err)
+		}
+
+		fmt.Printf("The user %v has been registered! Their name is %v %v and their email is %v!", user.Handle, user.FirstName, user.LastName, user.Email)
 	}
 }
