@@ -25,6 +25,11 @@ func main() {
 	// Registers predefined function handlers for url requests
 	http.HandleFunc("/login/", handlers.LoginForm)
 	http.HandleFunc("/login/submit/", handlers.LoginSubmit)
+	http.HandleFunc("/signup/", handlers.RegisterForm)
+	http.HandleFunc("/signup/submit/", handlers.RegisterSubmit)
+
+	// Registers predefined function handlers for url requests that require a user to be logged in
+	http.Handle("/secret/", handlers.AuthMiddleware(http.HandlerFunc(handlers.SecretHandler)))
 
 	// Including 127.0.0.1 before port :80 prevents from os requesting permission before every run
 	err := http.ListenAndServe("127.0.0.1:80", nil)
