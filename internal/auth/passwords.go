@@ -2,10 +2,8 @@
 package auth
 
 import (
-	"encoding/gob"
 	"fmt"
 	"os"
-	"root/internal/model"
 
 	"github.com/gorilla/sessions"
 	"golang.org/x/crypto/bcrypt"
@@ -26,9 +24,6 @@ func GetSessionSecret() *sessions.CookieStore {
     if err != nil {
         fmt.Println("There was an error reading the data!", err)
     }
-
-    // Register types for automatic de/serialization in sessions
-    gob.Register(model.User{})
 
     return sessions.NewCookieStore(data)
 }

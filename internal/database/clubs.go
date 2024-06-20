@@ -5,7 +5,7 @@ import (
 	"root/internal/model"
 )
 
-func GetClub(clubId uint) model.Club {
+func GetClub(clubId int) model.Club {
 	clubInfoQuery := `
 		SELECT 
 			clubId, 
@@ -51,7 +51,7 @@ func GetClub(clubId uint) model.Club {
 	return club
 }
 
-func GetUserClubList(userId uint) []string {
+func GetUserClubList(userId int) []string {
 	query := `
 		SELECT clubs.name
 		FROM app.clubs
@@ -80,12 +80,34 @@ func GetUserClubList(userId uint) []string {
 	return names
 }
 
-func JoinClub(userId, clubId int) {
+func JoinClub(clubId, userId int) error {
+	query := `
+		INSERT INTO app.users_clubs (userId, clubId)
+		VALUES (?, ?)
+	`
 
+	_, err := DB.Exec(query, userId, clubId)
+	if err != nil {
+		log.Println("There was an error joining the club:", err)
+		return err
+	}
+
+	return nil
 }
 
-func LeaveClub(userId, clubId int) {
+func LeaveClub(clubId, userId int) error {
+	query := `
+		DELETE FROM app.users_clubs
+		WHERE userId = ? AND clubId = ?
+	`
 
+	_, err := DB.Exec(query, userId, clubId)
+	if err != nil {
+		log.Println("There was an error leaving the club:", err)
+		return err
+	}
+
+	return nil
 }
 
 func CreateClub(userId, clubId int, name string) {

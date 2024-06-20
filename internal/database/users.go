@@ -26,7 +26,7 @@ func QueryUser(identifier interface{}) (model.User, error) {
 }
 
 // Checks if a user with given username exists and returns their password
-func GetLoginInfo(username string) (uint, string) {
+func GetLoginInfo(username string) (int, string) {
 	user, err := QueryUser(username)
 	if err != nil {
 		log.Println("There was an error querying the user!", err)
@@ -58,7 +58,7 @@ func UserFound(username, email string) (bool, string) {
 }
 
 // Inserts new user into database with given values
-func CreateUser(username, email, password, firstName, lastName string) (uint, error) {
+func CreateUser(username, email, password, firstName, lastName string) (int, error) {
 	hashedPassword, err := auth.HashPassword(password)
 	if err != nil {
 		fmt.Println("There was an error hashing the password!", err)
@@ -80,5 +80,5 @@ func CreateUser(username, email, password, firstName, lastName string) (uint, er
         return 0, err
     }
 
-	return uint(userId), nil
+	return int(userId), nil
 }
