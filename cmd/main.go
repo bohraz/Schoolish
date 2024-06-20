@@ -28,6 +28,11 @@ func main() {
 	http.HandleFunc("/signup/", handlers.RegisterForm)
 	http.HandleFunc("/signup/submit/", handlers.RegisterSubmit)
 
+	http.HandleFunc("/clubs/", handlers.Club)
+	http.HandleFunc("/clubs/create", handlers.ClubCreate)
+	http.HandleFunc("/clubs/search/", handlers.ClubSearch)
+	http.HandleFunc("/clubs/join/", handlers.ClubJoin)
+
 	// Registers predefined function handlers for url requests that require a user to be logged in
 	http.Handle("/secret/", handlers.AuthMiddleware(http.HandlerFunc(handlers.SecretHandler)))
 
