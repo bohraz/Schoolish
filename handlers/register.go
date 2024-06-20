@@ -53,7 +53,7 @@ func RegisterSubmit(writer http.ResponseWriter, request *http.Request) {
 			fmt.Println("There was an error getting the session!", err)
 		}
 
-		session.Values["user"] = user
+		session.Values["userId"] = userId
 		session.Values["authenticated"] = true
 		err = session.Save(request, writer)
 		if err != nil {

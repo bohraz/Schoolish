@@ -8,49 +8,49 @@ import (
 	"root/internal/model"
 )
 
-// Checks if a user with given username exists and returns their password
-func GetLoginInfo(username string) (model.User, string) {
-	query := `SELECT userId, password, firstName, lastName, email FROM app.users WHERE username = ? LIMIT 1`
+func QueryUser(identifier interface{}) (model.User, error) {
+	query := `SELECT userId, username, password, firstName, lastName, email FROM app.users WHERE username = ? OR userId = ? LIMIT 1`
 
-	var password string
-	user := model.User{
-		Handle: username,
-		// Email: request.FormValue("email"),
-		// FirstName: request.FormValue("firstname"),
-		// LastName: request.FormValue("lastname"),
-	}
+	user := model.User{}
 
-	err := DB.QueryRow(query, username).Scan(&user.Id, &password, &user.FirstName, &user.LastName, &user.Email)
+	err := DB.QueryRow(query, identifier, identifier).Scan(&user.Id, &user.Handle, &user.HashedPassword, &user.FirstName, &user.LastName, &user.Email)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			log.Println("No rows found!")
-			return user, ""
+			return user, err
 		}
 		panic(err)
 	}
 
-	return user, password
+	return user, nil
 }
 
-// Checks if a user with given username or email already exists
-func UserFound(username, email string) (bool, string) {
-	query := `SELECT username, email FROM app.users WHERE username = ? OR email = ? LIMIT 1`
-
-	var foundUsername, foundEmail string
-	err := DB.QueryRow(query, username, email).Scan(&foundUsername, &foundEmail)
+// Checks if a user with given username exists and returns their password
+func GetLoginInfo(username string) (uint, string) {
+	user, err := QueryUser(username)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			return false, ""
-		}
-		log.Fatal(err)
+		log.Println("There was an error querying the user!", err)
+		return 0, ""
 	}
 
-	if foundUsername == username {
-		if foundEmail == email {
+	return user.Id, user.HashedPassword
+}
+
+// Checks if a user with given username or email already exists and returns what, if anything, exists in a string
+func UserFound(username, email string) (bool, string) {
+	user, err := QueryUser(username)
+	if err != nil {
+		log.Println("There was an error querying the user!", err)
+		return false, ""
+	}
+
+	if user.Handle == username {
+		if user.Email == email {
 			return true, "username and email"
+		} else {
+			return true, "username"
 		}
-		return true, "username"
-	} else if foundEmail == email {
+	} else if user.Email == email {
 		return true, "email"
 	}
 

@@ -31,7 +31,7 @@ func LoginSubmit(writer http.ResponseWriter, request *http.Request) {
 	username := request.FormValue("username")
 	passwordFromUser := request.FormValue("password")
 
-	user, passwordFromDb := database.GetLoginInfo(username)
+	userId, passwordFromDb := database.GetLoginInfo(username)
 	success := auth.CheckPasswordHash(passwordFromUser, passwordFromDb)
 
 	if success {
@@ -40,7 +40,7 @@ func LoginSubmit(writer http.ResponseWriter, request *http.Request) {
 			fmt.Println("There was an error getting the session!", err)
 		}
 
-		session.Values["user"] = user
+		session.Values["userId"] = userId
 		session.Values["authenticated"] = true
 		session.Save(request, writer)
 

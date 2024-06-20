@@ -14,5 +14,5 @@ func SecretHandler(writer http.ResponseWriter, request *http.Request) {
         return
 	}
 
-	fmt.Fprintf(writer, "Welcome, %v!", session.Values["user"])
+	fmt.Fprintf(writer, "Welcome, %v!", session.Values["userId"])
 }
