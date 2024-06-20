@@ -31,7 +31,7 @@ func LoginSubmit(writer http.ResponseWriter, request *http.Request) {
 	username := request.FormValue("username")
 	passwordFromUser := request.FormValue("password")
 
-	user, passwordFromDb := database.CheckLoginInfo(username)
+	user, passwordFromDb := database.GetLoginInfo(username)
 	success := auth.CheckPasswordHash(passwordFromUser, passwordFromDb)
 
 	if success {

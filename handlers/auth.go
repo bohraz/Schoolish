@@ -16,7 +16,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 
 		authenticated, ok := session.Values["authenticated"].(bool)
 		if !ok || !authenticated {
-			http.Error(writer, "Unauthorizied", http.StatusUnauthorized)
+			http.Error(writer, "Unauthorized", http.StatusUnauthorized)
 			return
 		}
 

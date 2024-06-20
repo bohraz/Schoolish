@@ -29,7 +29,6 @@ func RegisterSubmit(writer http.ResponseWriter, request *http.Request) {
 		fmt.Print("Form failed to parse!", err)
 	}
 
-
 	user := model.User{
 		Handle: request.FormValue("username"),
 		Email: request.FormValue("email"),
@@ -41,11 +40,6 @@ func RegisterSubmit(writer http.ResponseWriter, request *http.Request) {
 	if found, str := database.UserFound(user.Handle, user.Email); found {
 		fmt.Fprintf(writer, "A user with that %s already exists!", str)
 		return
-	}
-
-	password, err = auth.HashPassword(password)
-	if err != nil {
-		fmt.Println("There was an error hashing the password!", err)
 	}
 
 	userId, err := database.CreateUser(user.Handle, user.Email, password, user.FirstName, user.LastName)

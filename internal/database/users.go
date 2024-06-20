@@ -2,12 +2,14 @@ package database
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
+	"root/internal/auth"
 	"root/internal/model"
 )
 
 // Checks if a user with given username exists and returns their password
-func CheckLoginInfo(username string) (model.User, string) {
+func GetLoginInfo(username string) (model.User, string) {
 	query := `SELECT userId, password, firstName, lastName, email FROM app.users WHERE username = ? LIMIT 1`
 
 	var password string
@@ -34,8 +36,8 @@ func CheckLoginInfo(username string) (model.User, string) {
 func UserFound(username, email string) (bool, string) {
 	query := `SELECT username, email FROM app.users WHERE username = ? OR email = ? LIMIT 1`
 
-	var foundFields [2]string
-	err := DB.QueryRow(query, username, email).Scan(&foundFields[0], &foundFields[1])
+	var foundUsername, foundEmail string
+	err := DB.QueryRow(query, username, email).Scan(&foundUsername, &foundEmail)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return false, ""
@@ -43,12 +45,12 @@ func UserFound(username, email string) (bool, string) {
 		log.Fatal(err)
 	}
 
-	if foundFields[0] == username {
-		if foundFields[1] == email {
+	if foundUsername == username {
+		if foundEmail == email {
 			return true, "username and email"
 		}
 		return true, "username"
-	} else if foundFields[1] == email {
+	} else if foundEmail == email {
 		return true, "email"
 	}
 
@@ -57,11 +59,16 @@ func UserFound(username, email string) (bool, string) {
 
 // Inserts new user into database with given values
 func CreateUser(username, email, password, firstName, lastName string) (uint, error) {
+	hashedPassword, err := auth.HashPassword(password)
+	if err != nil {
+		fmt.Println("There was an error hashing the password!", err)
+	}
+
 	query := `INSERT INTO app.users
 			(username,email,password,firstName,lastName)
 			VALUES (?,?,?,?,?)`
 	
-	result, err := DB.Exec(query, username, email, password, firstName, lastName)
+	result, err := DB.Exec(query, username, email, hashedPassword, firstName, lastName)
 	if err != nil {
 		log.Println("There was an error executing the CreateUser query!", err)
 		return 0, err
