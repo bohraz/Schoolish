@@ -23,13 +23,14 @@ func main() {
 	http.Handle("/page/", http.StripPrefix("/page", fs))
 
 	// Registers predefined function handlers for url requests
-	http.HandleFunc("/login/", handlers.LoginForm)
+	http.HandleFunc("/login/", handlers.ServeFileHandler("static/html/login.html"))
 	http.HandleFunc("/login/submit/", handlers.LoginSubmit)
 	http.HandleFunc("/signup/", handlers.RegisterForm)
 	http.HandleFunc("/signup/submit/", handlers.RegisterSubmit)
 
 	http.HandleFunc("/clubs/", handlers.Club)
-	http.HandleFunc("/clubs/create", handlers.ClubCreate)
+	http.HandleFunc("/clubs/create", handlers.ServeFileHandler("static/html/club_create.html"))
+	http.HandleFunc("/clubs/create/submit/", handlers.ClubCreateSubmit)
 	http.HandleFunc("/clubs/search/", handlers.ClubSearch)
 	http.HandleFunc("/clubs/join/", handlers.ClubJoin)
 	http.HandleFunc("/clubs/leave/", handlers.ClubLeave)

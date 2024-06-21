@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"os"
 	"root/internal/auth"
 	"root/internal/database"
 	"root/internal/model"
@@ -29,4 +30,15 @@ func GetUser(request *http.Request) (model.User, error) {
 	}
 
 	return user, nil
+}
+
+func ServeFileHandler(path string) func(http.ResponseWriter, *http.Request) {
+	return func(writer http.ResponseWriter, request *http.Request) {
+		if _, err := os.Stat(path); os.IsNotExist(err) {
+			http.Error(writer, "File not found!!!", http.StatusNotFound)
+			fmt.Println(err)
+		}
+	
+		http.ServeFile(writer, request, path)
+	}
 }

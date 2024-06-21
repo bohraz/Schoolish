@@ -93,10 +93,25 @@ func ClubSearch(writer http.ResponseWriter, request *http.Request) {
 	fmt.Fprint(writer, "Club search!")
 }
 
-func ClubCreate(writer http.ResponseWriter, request *http.Request) {
-	fmt.Fprint(writer, "Club create!")
-}
-
 func ClubCreateSubmit(writer http.ResponseWriter, request *http.Request) {
-	fmt.Fprint(writer, "Club creation submit!")
+	var (
+		name = request.FormValue("clubName")
+		desc = request.FormValue("clubDescription")
+	)
+
+	user, err := GetUser(request)
+	if err != nil {
+		http.Error(writer, "Unauthorized", http.StatusUnauthorized)
+		log.Println(err)
+		return
+	}
+
+	clubId, err := database.CreateClub(name, desc, user.Id)
+	if err != nil {
+		http.Error(writer, "Error creating club", http.StatusInternalServerError)
+		return
+	}
+
+	fmt.Fprintf(writer, `<div id="message">Club %s created!</div>`, name)
+	fmt.Fprintf(writer, `<script>setTimeout(function() { window.location.href = "/clubs/%d/"; }, 2000);</script>`, clubId)
 }
