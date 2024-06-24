@@ -26,8 +26,8 @@ func getClubFromURL(writer http.ResponseWriter, request *http.Request, idIndex i
 	return club
 }
 
-func Club(writer http.ResponseWriter, request *http.Request) {
-	user, err := GetUser(request)
+func ClubView(writer http.ResponseWriter, request *http.Request) {
+	user, err := GetLoggedInUser(request)
 	if err != nil {
 		http.Error(writer, "Unauthorized", http.StatusUnauthorized)
 		log.Println(err)
@@ -37,7 +37,7 @@ func Club(writer http.ResponseWriter, request *http.Request) {
 	clubList := database.GetUserClubList(user.Id)
 	club := getClubFromURL(writer, request, 2)
 	
-	fmt.Fprintln(writer, "Selected Club:", club.ID, club.Name, club.Description, club.Owner, club.DateCreated)
+	fmt.Fprintln(writer, "Selected Club:", club.ID, club.Name, club.Description, club.OwnerId, club.DateCreated)
 	
 	memberCount := len(club.Members)
 	fmt.Fprint(writer, "Members:")
@@ -56,7 +56,7 @@ func Club(writer http.ResponseWriter, request *http.Request) {
 }
 
 func ClubJoin(writer http.ResponseWriter, request *http.Request) {
-	user, _ := GetUser(request)
+	user, _ := GetLoggedInUser(request)
 	club := getClubFromURL(writer, request, 3)
 
 	err := database.JoinClub(club.ID, user.Id)
@@ -73,7 +73,7 @@ func ClubJoin(writer http.ResponseWriter, request *http.Request) {
 }
 
 func ClubLeave(writer http.ResponseWriter, request *http.Request) {
-	user, _ := GetUser(request)
+	user, _ := GetLoggedInUser(request)
 	club := getClubFromURL(writer, request, 3)
 
 	err := database.LeaveClub(club.ID, user.Id)
@@ -99,7 +99,7 @@ func ClubCreateSubmit(writer http.ResponseWriter, request *http.Request) {
 		desc = request.FormValue("clubDescription")
 	)
 
-	user, err := GetUser(request)
+	user, err := GetLoggedInUser(request)
 	if err != nil {
 		http.Error(writer, "Unauthorized", http.StatusUnauthorized)
 		log.Println(err)

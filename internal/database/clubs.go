@@ -29,7 +29,7 @@ func GetClub(clubId int) model.Club {
 
 	var club model.Club
 
-	err := DB.QueryRow(clubInfoQuery, clubId).Scan(&club.ID, &club.Name, &club.Description, &club.DateCreated, &club.Owner, &club.Integrations)
+	err := DB.QueryRow(clubInfoQuery, clubId).Scan(&club.ID, &club.Name, &club.Description, &club.DateCreated, &club.OwnerId, &club.Integrations)
 	if err != nil {
 		log.Println("There was an error when querying for club list: ", err)
 	}

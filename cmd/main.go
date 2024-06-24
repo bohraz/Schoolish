@@ -28,7 +28,7 @@ func main() {
 	http.HandleFunc("/signup/", handlers.RegisterForm)
 	http.HandleFunc("/signup/submit/", handlers.RegisterSubmit)
 
-	http.HandleFunc("/clubs/", handlers.Club)
+	http.HandleFunc("/clubs/", handlers.ClubView)
 	http.HandleFunc("/clubs/create", handlers.ServeFileHandler("static/html/club_create.html"))
 	http.HandleFunc("/clubs/create/submit/", handlers.ClubCreateSubmit)
 	http.HandleFunc("/clubs/search/", handlers.ClubSearch)

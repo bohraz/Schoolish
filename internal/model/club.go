@@ -7,7 +7,7 @@ type Club struct {
 	Name         string
 	Description  string
 	DateCreated  string
-	Owner        sql.NullInt64
+	OwnerId        sql.NullInt64
 	Integrations sql.NullString
 	Members []User
 }

@@ -10,7 +10,7 @@ import (
 	"root/internal/model"
 )
 
-func GetUser(request *http.Request) (model.User, error) {
+func GetLoggedInUser(request *http.Request) (model.User, error) {
 	session, err := auth.SESSION_STORE.Get(request, "auth-session")
 	if err != nil {
 		msg := fmt.Sprintf("error getting session: %v", err)
