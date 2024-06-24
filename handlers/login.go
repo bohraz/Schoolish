@@ -3,22 +3,9 @@ package handlers
 import (
 	"fmt"
 	"net/http"
-	"os"
 	"root/internal/auth"
 	"root/internal/database"
 )
-
-// This handler serves the static html login file
-func LoginForm(writer http.ResponseWriter, request *http.Request) {
-	path := "static/html/login.html"
-	if _, err := os.Stat(path); os.IsNotExist(err) {
-		http.Error(writer, "File not found!!!", http.StatusNotFound)
-		fmt.Println(err)
-		return
-	}
-
-	http.ServeFile(writer, request, path)
-}
 
 // Temporary login submission handler gets form data, checks login info, and prints result
 // If successful assigns user info to auth-session cookie
