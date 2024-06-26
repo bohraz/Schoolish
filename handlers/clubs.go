@@ -123,8 +123,32 @@ func ClubCreateSubmit(writer http.ResponseWriter, request *http.Request) {
 	fmt.Fprintf(writer, `<script>setTimeout(function() { window.location.href = "/clubs/%d/"; }, 2000);</script>`, clubId)
 }
 
+func canEditClub(writer http.ResponseWriter, request *http.Request) bool {
+	user, err := GetLoggedInUser(request)
+	if err != nil {
+		http.Error(writer, "Unauthorized", http.StatusUnauthorized)
+		log.Println(err)
+		return false
+	}
+
+	clubId := getClubIdFromURL(writer, request, 3)
+	role := database.GetUserClubRole(user.Id, clubId)
+	if role < 2 {
+		http.Error(writer, "Unauthorized", http.StatusUnauthorized)
+		msg := fmt.Sprintf("User %d does not have permission to edit club %d", user.Id, clubId)
+		log.Println(msg, role)
+		return false
+	}
+
+	return true
+}
+
 func ClubEdit(writer http.ResponseWriter, request *http.Request) {
     clubId := getClubIdFromURL(writer, request, 3)
+
+	if !canEditClub(writer, request) {
+		return
+	}
 
     formTemplate := `
 <!DOCTYPE html>
@@ -167,18 +191,7 @@ func ClubEditSubmit(writer http.ResponseWriter, request *http.Request) {
 	clubId := getClubIdFromURL(writer, request, 4)
 	fmt.Println("Club id: ", clubId)
 
-	user, err := GetLoggedInUser(request)
-	if err != nil {
-		http.Error(writer, "Unauthorized", http.StatusUnauthorized)
-		log.Println(err)
-		return
-	}
-
-	role := database.GetUserClubRole(user.Id, clubId)
-	if role < 2 {
-		http.Error(writer, "Unauthorized", http.StatusUnauthorized)
-		msg := fmt.Sprintf("User %d does not have permission to edit club %d", user.Id, clubId)
-		log.Println(msg, role)
+	if !canEditClub(writer, request) {
 		return
 	}
 
@@ -188,7 +201,7 @@ func ClubEditSubmit(writer http.ResponseWriter, request *http.Request) {
 		Description: request.FormValue("clubDescription"),
 	}
 
-	err = database.UpdateClub(updatedClub)
+	err := database.UpdateClub(updatedClub)
 	if err != nil {
 		http.Error(writer, "Error updating club", http.StatusInternalServerError)
 		return
