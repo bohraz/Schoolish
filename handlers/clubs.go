@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"fmt"
+	"html/template"
 	"log"
 	"net/http"
 	"root/internal/database"
@@ -10,12 +11,18 @@ import (
 	"strings"
 )
 
-func getClubFromURL(writer http.ResponseWriter, request *http.Request, idIndex int) (model.Club) {
+func getClubIdFromURL(writer http.ResponseWriter, request *http.Request, idIndex int) int {
 	clubId, err := strconv.Atoi(strings.Split(request.URL.Path, "/")[idIndex])
 	if err != nil {
 		http.Error(writer, "There was an error processing the URL", http.StatusBadRequest)
-		return model.Club{}
+		return 0
 	}
+
+	return clubId
+}
+
+func getClubFromURL(writer http.ResponseWriter, request *http.Request, idIndex int) (model.Club) {
+	clubId := getClubIdFromURL(writer, request, idIndex)
 
 	club := database.GetClub(clubId)
 	if club.ID == 0 {
@@ -113,5 +120,80 @@ func ClubCreateSubmit(writer http.ResponseWriter, request *http.Request) {
 	}
 
 	fmt.Fprintf(writer, `<div id="message">Club %s created!</div>`, name)
+	fmt.Fprintf(writer, `<script>setTimeout(function() { window.location.href = "/clubs/%d/"; }, 2000);</script>`, clubId)
+}
+
+func ClubEdit(writer http.ResponseWriter, request *http.Request) {
+    clubId := getClubIdFromURL(writer, request, 3)
+
+    formTemplate := `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Edit Club</title>
+</head>
+<body>
+    <h1>Edit Club</h1>
+    <form action="/clubs/edit/submit/{{.ClubId}}" method="post">
+        <label for="clubName">Club Name:</label>
+        <input type="text" id="clubName" name="clubName" required><br>
+        <label for="clubDescription">Description:</label>
+        <textarea id="clubDescription" name="clubDescription" required></textarea><br>
+        <button type="submit">Update Club</button>
+    </form>
+</body>
+</html>
+`
+
+    // Parse and execute the template
+    tmpl, err := template.New("editClubForm").Parse(formTemplate)
+    if err != nil {
+        http.Error(writer, "Error rendering form", http.StatusInternalServerError)
+        return
+    }
+
+	clubIdStr := strconv.Itoa(clubId)
+	err = tmpl.Execute(writer, map[string]interface{}{
+		"ClubId": clubIdStr,
+	})
+    if err != nil {
+        http.Error(writer, "Error rendering form", http.StatusInternalServerError)
+        return
+    }
+}
+
+func ClubEditSubmit(writer http.ResponseWriter, request *http.Request) {
+	clubId := getClubIdFromURL(writer, request, 4)
+	fmt.Println("Club id: ", clubId)
+
+	user, err := GetLoggedInUser(request)
+	if err != nil {
+		http.Error(writer, "Unauthorized", http.StatusUnauthorized)
+		log.Println(err)
+		return
+	}
+
+	role := database.GetUserClubRole(user.Id, clubId)
+	if role < 2 {
+		http.Error(writer, "Unauthorized", http.StatusUnauthorized)
+		msg := fmt.Sprintf("User %d does not have permission to edit club %d", user.Id, clubId)
+		log.Println(msg, role)
+		return
+	}
+
+	updatedClub := model.Club{
+		ID: clubId,
+		Name: request.FormValue("clubName"),
+		Description: request.FormValue("clubDescription"),
+	}
+
+	err = database.UpdateClub(updatedClub)
+	if err != nil {
+		http.Error(writer, "Error updating club", http.StatusInternalServerError)
+		return
+	}
+
+	fmt.Fprintf(writer, `<div id="message">Club %s updated!</div>`, updatedClub.Name)
 	fmt.Fprintf(writer, `<script>setTimeout(function() { window.location.href = "/clubs/%d/"; }, 2000);</script>`, clubId)
 }

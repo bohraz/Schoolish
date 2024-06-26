@@ -189,3 +189,29 @@ func CreateClub(name, description string, userId int) (int, error) {
 	
 	return int(id), nil
 }
+
+func GetUserClubRole(userId, clubId int) int {
+	query := `SELECT role FROM app.users_clubs WHERE userId = ? AND clubId = ?`
+
+	var role int
+	err := DB.QueryRow(query, userId, clubId).Scan(&role)
+	if err != nil {
+		log.Println("There was an error getting the user role:", err)
+	}
+
+	return role
+}
+
+// Updates the club name and description. Right now query requires both to be updated
+// In future will make only one of them required
+func UpdateClub(club model.Club) error {
+	query := `UPDATE app.clubs SET name = ?, description = ? WHERE clubId = ?`
+
+	_, err := DB.Exec(query, club.Name, club.Description, club.ID)
+	if err != nil {
+		log.Println("There was an error updating the club:", err)
+		return err
+	}
+
+	return nil
+}

@@ -34,6 +34,8 @@ func main() {
 	http.HandleFunc("/clubs/search/", handlers.ClubSearch)
 	http.HandleFunc("/clubs/join/", handlers.ClubJoin)
 	http.HandleFunc("/clubs/leave/", handlers.ClubLeave)
+	http.HandleFunc("/clubs/edit/", handlers.ClubEdit)
+	http.HandleFunc("/clubs/edit/submit/", handlers.ClubEditSubmit)
 
 	// Registers predefined function handlers for url requests that require a user to be logged in
 	http.Handle("/secret/", handlers.AuthMiddleware(http.HandlerFunc(handlers.SecretHandler)))
