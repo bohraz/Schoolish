@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"encoding/json"
 	"fmt"
 	"html/template"
 	"log"
@@ -10,6 +11,10 @@ import (
 	"strconv"
 	"strings"
 )
+
+func init() {
+	ApiHandlers["clubCreate"] = clubCreate
+}
 
 func getClubIdFromURL(writer http.ResponseWriter, request *http.Request, idIndex int) int {
 	clubId, err := strconv.Atoi(strings.Split(request.URL.Path, "/")[idIndex])
@@ -31,6 +36,56 @@ func getClubFromURL(writer http.ResponseWriter, request *http.Request, idIndex i
 	}
 
 	return club
+}
+
+type clubCreateRequest struct {
+	Name string `json:"name"`
+	Description string `json:"description"`
+}
+
+type clubCreateResponse struct {
+	ClubID int `json:"clubId"`
+	Name string `json:"name"`
+}
+
+func clubCreate(writer http.ResponseWriter, request *http.Request) error {
+	user, err := GetLoggedInUser(request)
+	if err != nil {
+		http.Error(writer, "Unauthorized", http.StatusUnauthorized)
+		log.Println(err)
+		return err
+	}
+
+	var createRequest clubCreateRequest
+	err = json.NewDecoder(request.Body).Decode(&createRequest)
+	if err != nil {
+		http.Error(writer, err.Error(), http.StatusBadRequest)
+		return err
+	}
+
+
+	clubId, err := database.CreateClub(createRequest.Name, createRequest.Description, user.Id)
+	if err != nil {
+		http.Error(writer, "Error creating club", http.StatusInternalServerError)
+		return err
+	}
+
+	response := clubCreateResponse{
+		ClubID: clubId,
+		Name: createRequest.Name,
+	}
+
+	responseJson, err := json.Marshal(response)
+	if err != nil {
+		http.Error(writer, "Error encoding response", http.StatusInternalServerError)
+		return err
+	}
+
+	writer.Header().Set("Content-Type", "application/json")
+	writer.WriteHeader(http.StatusOK)
+	writer.Write(responseJson)
+
+	return nil
 }
 
 func ClubView(writer http.ResponseWriter, request *http.Request) {
@@ -98,29 +153,6 @@ func ClubLeave(writer http.ResponseWriter, request *http.Request) {
 
 func ClubSearch(writer http.ResponseWriter, request *http.Request) {
 	fmt.Fprint(writer, "Club search!")
-}
-
-func ClubCreateSubmit(writer http.ResponseWriter, request *http.Request) {
-	var (
-		name = request.FormValue("clubName")
-		desc = request.FormValue("clubDescription")
-	)
-
-	user, err := GetLoggedInUser(request)
-	if err != nil {
-		http.Error(writer, "Unauthorized", http.StatusUnauthorized)
-		log.Println(err)
-		return
-	}
-
-	clubId, err := database.CreateClub(name, desc, user.Id)
-	if err != nil {
-		http.Error(writer, "Error creating club", http.StatusInternalServerError)
-		return
-	}
-
-	fmt.Fprintf(writer, `<div id="message">Club %s created!</div>`, name)
-	fmt.Fprintf(writer, `<script>setTimeout(function() { window.location.href = "/clubs/%d/"; }, 2000);</script>`, clubId)
 }
 
 func canEditClub(writer http.ResponseWriter, request *http.Request) bool {

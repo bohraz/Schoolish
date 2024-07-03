@@ -49,7 +49,7 @@
 <body>
     <div class="container">
         <h2>Create Club</h2>
-        <form action="/clubs/create/submit/" method="post" id="createClubForm">
+        <form method="post" id="createClubForm" onsubmit="submitForm(event)" >
             <div class="form-group">
                 <label for="name">Club Name</label>
                 <input type="text" id="name" name="clubName" required>

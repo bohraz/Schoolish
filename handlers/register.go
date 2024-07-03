@@ -46,7 +46,7 @@ func RegisterSubmit(writer http.ResponseWriter, request *http.Request) {
 	if err != nil {
 		return
 	} else {
-		user.Id = userId
+		// user.Id = userId
 
 		session, err := auth.SESSION_STORE.Get(request, "auth-session")
 		if err != nil {
