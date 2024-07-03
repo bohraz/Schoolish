@@ -140,7 +140,7 @@ func LeaveClub(clubId, userId int) error {
 func CreateClub(name, description string, userId int) (int, error) {
 	checkExistsQuery := `SELECT EXISTS(SELECT 1 FROM app.clubs WHERE name = ?)`
 	clubsQuery := `INSERT INTO app.clubs (name, description, userId, dateCreated)VALUES (?, ?, ?, ?)`
-	memberQuery := `INSERT INTO app.users_clubs (userId, clubId) VALUES (?, ?)`
+	memberQuery := `INSERT INTO app.users_clubs (userId, clubId, role) VALUES (?, ?, ?)`
 
 	tx, err := DB.Begin()
 	defer func() {
@@ -181,7 +181,7 @@ func CreateClub(name, description string, userId int) (int, error) {
 		return 0, err
 	}
 
-	_, err = tx.Exec(memberQuery, userId, id)
+	_, err = tx.Exec(memberQuery, userId, id, 3)
 	if err != nil {
 		log.Println("There was an error adding the user to the club:", err)
 		return 0, err

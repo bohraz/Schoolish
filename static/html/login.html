@@ -50,11 +50,12 @@
 <body>
     <div class="login-container">
         <h2>Login</h2>
-        <form action="/login/submit/" method="post">
-            <input type="text" name="username" aria-label="Password" placeholder="Username" required>
-            <input type="password" name="password" aria-label="Password" placeholder="Password" required>
+        <form method="post" id="login" onsubmit="login(event)">
+            <input type="text" id="username" name="username" aria-label="Password" placeholder="Username" required>
+            <input type="password" id="password" name="password" aria-label="Password" placeholder="Password" required>
             <button type="submit">Login</button>
         </form>
     </div>
+    <script src = "/static/script/login.js"></script>
 </body>
 </html>

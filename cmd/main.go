@@ -29,7 +29,6 @@ func main() {
 
 	// Registers predefined function handlers for url requests
 	http.HandleFunc("/login/", handlers.ServeFileHandler("static/html/login.html"))
-	http.HandleFunc("/login/submit/", handlers.LoginSubmit)
 	http.HandleFunc("/signup/", handlers.RegisterForm)
 	http.HandleFunc("/signup/submit/", handlers.RegisterSubmit)
 
