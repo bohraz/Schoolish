@@ -22,6 +22,11 @@ func main() {
 	// Registers a handler for /page/ url request and strips /page from url for effective file search
 	http.Handle("/page/", http.StripPrefix("/page", fs))
 
+	// Registers a handler to serve files from the /static/ directory, necessary for html files to load css and js files
+	staticDir := http.Dir("static")
+	staticFS := http.FileServer(staticDir)
+	http.Handle("/static/", http.StripPrefix("/static/", staticFS))
+
 	// Registers predefined function handlers for url requests
 	http.HandleFunc("/login/", handlers.ServeFileHandler("static/html/login.html"))
 	http.HandleFunc("/login/submit/", handlers.LoginSubmit)
