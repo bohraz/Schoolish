@@ -46,3 +46,14 @@ func ServeFileHandler(path string) func(http.ResponseWriter, *http.Request) {
 		http.ServeFile(writer, request, path)
 	}
 }
+
+func removeEmptyStringsFromPath(splitPath *[]string) {
+    for i := 0; i < len(*splitPath); {
+        if (*splitPath)[i] == "" {
+            // Remove the element at index i by appending the elements before i with the elements after i
+            *splitPath = append((*splitPath)[:i], (*splitPath)[i+1:]...)
+        } else {
+            i++
+        }
+    }
+}

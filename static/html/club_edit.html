@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Edit Club</title>
+</head>
+<body>
+    <h1>Edit Club</h1>
+    <form method="post" onsubmit="edit(event)">
+        <label for="clubName">Club Name:</label>
+        <input type="text" id="name" aria-label="club name" required><br>
+        <label for="clubDescription">Description:</label>
+        <textarea id="description" required></textarea><br>
+        <button type="submit">Update Club</button>
+    </form>
+	<script src="/static/script/editClub.js"></script>
+</body>
+</html>
