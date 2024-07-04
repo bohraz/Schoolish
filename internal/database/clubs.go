@@ -1,6 +1,7 @@
 package database
 
 import (
+	"database/sql"
 	"errors"
 	"log"
 	"root/internal/model"
@@ -28,15 +29,16 @@ func GetClub(clubId int) model.Club {
 	`
 
 	var club model.Club
-
 	err := DB.QueryRow(clubInfoQuery, clubId).Scan(&club.ID, &club.Name, &club.Description, &club.DateCreated, &club.OwnerId, &club.Integrations)
 	if err != nil {
 		log.Println("There was an error when querying for club list: ", err)
+		return club
 	}
 
 	rows, err := DB.Query(clubMemberListQuery, clubId)
 	if err != nil {
 		log.Println("There was an error when querying for club members: ", err)
+		return club
 	}
 
 	for rows.Next() {
@@ -84,8 +86,8 @@ func GetUserClubList(userId int) []string {
 
 func JoinClub(clubId, userId int) error {
 	query := `
-		INSERT INTO app.users_clubs (userId, clubId)
-		VALUES (?, ?)
+		INSERT INTO app.users_clubs (userId, clubId, role)
+		VALUES (?, ?, 1)
 	`
 
 	_, err := DB.Exec(query, userId, clubId)
@@ -196,7 +198,11 @@ func GetUserClubRole(userId, clubId int) int {
 	var role int
 	err := DB.QueryRow(query, userId, clubId).Scan(&role)
 	if err != nil {
-		log.Println("There was an error getting the user role:", err)
+		if err == sql.ErrNoRows {
+			log.Println("The user is not in the club")
+			return 0
+		}
+		log.Panic("There was an error getting the user role:", err)
 	}
 
 	return role

@@ -36,8 +36,7 @@ func main() {
 	http.HandleFunc("/clubs/search/", handlers.ClubSearch)
 	http.HandleFunc("/clubs/join/", handlers.ClubJoin)
 	http.HandleFunc("/clubs/leave/", handlers.ClubLeave)
-	http.HandleFunc("/clubs/edit/", handlers.ClubEdit)
-	http.HandleFunc("/clubs/edit/submit/", handlers.ClubEditSubmit)
+	http.Handle("/clubs/edit/", handlers.AuthServeFileHandler("static/html/club_edit.html"))
 
 	http.HandleFunc("/api/", handlers.Api)
 
