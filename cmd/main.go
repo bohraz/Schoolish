@@ -29,8 +29,7 @@ func main() {
 
 	// Registers predefined function handlers for url requests
 	http.HandleFunc("/login/", handlers.ServeFileHandler("static/html/login.html"))
-	http.HandleFunc("/signup/", handlers.RegisterForm)
-	http.HandleFunc("/signup/submit/", handlers.RegisterSubmit)
+	http.HandleFunc("/signup/", handlers.ServeFileHandler("static/html/register.html"))
 
 	http.HandleFunc("/clubs/", handlers.ClubView)
 	http.HandleFunc("/clubs/create", handlers.ServeFileHandler("static/html/club_create.html"))

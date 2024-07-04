@@ -10,6 +10,10 @@ import (
 	"root/internal/model"
 )
 
+type successResponse struct {
+	Success bool `json:"success"`
+}
+
 func GetLoggedInUser(request *http.Request) (model.User, error) {
 	session, err := auth.SESSION_STORE.Get(request, "auth-session")
 	if err != nil {

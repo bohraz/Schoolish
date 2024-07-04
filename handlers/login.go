@@ -6,33 +6,24 @@ import (
 	"net/http"
 	"root/internal/auth"
 	"root/internal/database"
+	"root/internal/model"
 )
-
-type loginRequest struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
-}
-
-type loginResponse struct {
-	Success bool `json:"success"`
-}
 
 func init() {
 	ApiHandlers["login"] = login
 }
-// Temporary login submission handler gets form data, checks login info, and prints result
-// If successful assigns user info to auth-session cookie
+
 func login(writer http.ResponseWriter, request *http.Request) error {
-	var loginInfo loginRequest
+	var loginInfo model.User
 	err := json.NewDecoder(request.Body).Decode(&loginInfo)
 	if err != nil {
 		http.Error(writer, "Error decoding request", http.StatusBadRequest)
 		return err
 	}
 
-	userId, passwordFromDb := database.GetLoginInfo(loginInfo.Username)
+	userId, passwordFromDb := database.GetLoginInfo(loginInfo.Handle)
 	success := auth.CheckPasswordHash(loginInfo.Password, passwordFromDb)
-	response := loginResponse{}
+	response := successResponse{}
 
 	if success {
 		session, err := auth.SESSION_STORE.Get(request, "auth-session")

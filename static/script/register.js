@@ -1,10 +1,13 @@
-function login(event) {
+function register(event) {
     event.preventDefault();
 
-    const url = "/api/login/";
+    const url = "/api/register/";
     const data = {
         username: document.getElementById("username").value,
-        password: document.getElementById("password").value
+        password: document.getElementById("password").value,
+        email: document.getElementById("email").value,
+        first_name: document.getElementById("first_name").value,
+        last_name: document.getElementById("last_name").value
     };
 
     fetch(url, {
@@ -22,9 +25,9 @@ function login(event) {
         })
         .then(data => {
             if (data.success) {
-                console.log('Logged in successfully!');
+                console.log('Registered successfully!');
             } else {
-                console.error('Failed to log in!');
+                console.error('Failed to register!');
             }
         })
         .catch(error => {
