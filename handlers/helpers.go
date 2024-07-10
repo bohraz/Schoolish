@@ -12,6 +12,7 @@ import (
 
 type successResponse struct {
 	Success bool `json:"success"`
+	Id 	int  `json:"id"`
 }
 
 func GetLoggedInUser(request *http.Request) (model.User, error) {

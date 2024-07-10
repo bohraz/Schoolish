@@ -9,31 +9,27 @@ import (
 	"root/internal/model"
 )
 
-func init() {
-	ApiHandlers["register"] = register
-}
-
-func register(writer http.ResponseWriter, request *http.Request) error {
+func RegisterApi(writer http.ResponseWriter, request *http.Request) {
 	var registerInfo model.User
 	err := json.NewDecoder(request.Body).Decode(&registerInfo)
 	if err != nil {
 		http.Error(writer, "Error decoding request", http.StatusBadRequest)
-		return err
+		return
 	}
 	
 	if found, str := database.UserFound(registerInfo.Handle, registerInfo.Email); found {
 		fmt.Fprintf(writer, "A user with that %s already exists!", str)
-		return nil
+		return
 	}
 
 	userId, err := database.CreateUser(registerInfo.Handle, registerInfo.Email, registerInfo.Password, registerInfo.FirstName, registerInfo.LastName)
 	if err != nil {
-		return err
+		return
 	} else {
 		session, err := auth.SESSION_STORE.Get(request, "auth-session")
 		if err != nil {
 			fmt.Println("There was an error getting the session!", err)
-			return err
+			return
 		}
 
 		session.Values["userId"] = userId
@@ -41,14 +37,14 @@ func register(writer http.ResponseWriter, request *http.Request) error {
 		err = session.Save(request, writer)
 		if err != nil {
 			fmt.Fprint(writer, "There was an error: ", err)
-			return err
+			return
 		}
 
 		response := successResponse{Success: true}
 		responseJson, err := json.Marshal(response)
 		if err != nil {
 			http.Error(writer, "Error encoding response", http.StatusInternalServerError)
-			return err
+			return
 		}
 
 		writer.Header().Set("Content-Type", "application/json")
@@ -56,7 +52,5 @@ func register(writer http.ResponseWriter, request *http.Request) error {
 		writer.Write(responseJson)
 
 		fmt.Printf("The user %v has been registered! Their name is %v %v and their email is %v!", registerInfo.Handle, registerInfo.FirstName, registerInfo.LastName, registerInfo.Email)
-
-		return nil
 	}
 }

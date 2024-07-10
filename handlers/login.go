@@ -9,16 +9,12 @@ import (
 	"root/internal/model"
 )
 
-func init() {
-	ApiHandlers["login"] = login
-}
-
-func login(writer http.ResponseWriter, request *http.Request) error {
+func LoginApi(writer http.ResponseWriter, request *http.Request)  {
 	var loginInfo model.User
 	err := json.NewDecoder(request.Body).Decode(&loginInfo)
 	if err != nil {
 		http.Error(writer, "Error decoding request", http.StatusBadRequest)
-		return err
+		return
 	}
 
 	userId, passwordFromDb := database.GetLoginInfo(loginInfo.Handle)
@@ -45,12 +41,10 @@ func login(writer http.ResponseWriter, request *http.Request) error {
 	responseJson, err := json.Marshal(response)
 	if err != nil {
 		http.Error(writer, "Error encoding response", http.StatusInternalServerError)
-		return err
+		return
 	}
 
 	writer.Header().Set("Content-Type", "application/json")
 	writer.WriteHeader(http.StatusOK)
 	writer.Write(responseJson)
-
-	return nil
 }
