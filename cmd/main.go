@@ -40,6 +40,7 @@ func main() {
 	router.HandleFunc("/api/login/", handlers.LoginApi).Methods("POST")
 	router.HandleFunc("/api/register/", handlers.RegisterApi).Methods("POST")
 	router.HandleFunc("/api/post/create/", handlers.CreatePostApi).Methods("POST")
+	router.HandleFunc("/api/posts", handlers.GetPostsApi).Methods("GET")
 
 	// Including 127.0.0.1 before port :80 prevents from os requesting permission before every run
 	err := http.ListenAndServe("127.0.0.1:80", router)

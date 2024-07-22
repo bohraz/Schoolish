@@ -1,4 +1,6 @@
 const feed = document.getElementById("feed");
+var unloadedPosts = [];
+var looping = false;
 
 function createPost(event) {
     event.preventDefault();
@@ -37,12 +39,36 @@ function createPost(event) {
         })
 }
 
-function loadPosts() {
+async function getPosts() {
+    if (looping) {
+        return;
+    }
 
-}
+    looping = true;
 
-function loadPost() {
+    while (unloadedPosts.length > 0) {
+        try {
+            const url = "/api/posts?amount=3"
 
+            const response = await fetch(url);
+            if (!response.ok) {
+                throw new Error("Network response was not ok");
+            }
+
+            const posts = await response.json()
+
+            for (let post of posts) {
+                const postDiv = unloadedPosts.shift();
+                postDiv.querySelector("h3").textContent = post.title;
+                postDiv.querySelector("h4").textContent = post.author;
+                postDiv.querySelector("p").textContent = post.content;
+            }
+        } catch (error) {
+            console.error("Error:", error);
+        }
+    }
+
+    looping = false;
 }
 
 function generateBlankPosts() {
@@ -57,9 +83,12 @@ function generateBlankPosts() {
         `
 
         posts.push(post);
+        unloadedPosts.push(post);
     }
 
     feed.append(...posts);
+
+    getPosts();
 
     requestAnimationFrame(() => {
         if (window.innerHeight >= document.body.scrollHeight) {

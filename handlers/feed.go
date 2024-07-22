@@ -7,6 +7,7 @@ import (
 	"root/internal/auth"
 	"root/internal/database"
 	"root/internal/model"
+	"strconv"
 )
 
 // On scroll down get and display next x posts
@@ -54,6 +55,44 @@ func CreatePostApi(writer http.ResponseWriter, request *http.Request) {
 		writer.Write(responseJson)
 	
 	}
+}
+
+func GetPostsApi(writer http.ResponseWriter, request *http.Request) {
+	_, err := GetLoggedInUser(request)
+	if err != nil {
+		http.Error(writer, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	amountStr := request.URL.Query().Get("amount")
+    if amountStr == "" {
+        http.Error(writer, "Missing amount parameter", http.StatusBadRequest)
+        return
+    }
+
+	amount, err := strconv.Atoi(amountStr)
+	if err != nil {
+		http.Error(writer, "Invalid amount parameter", http.StatusBadRequest)
+		return
+	}
+
+	posts, err := database.GetPosts(amount)
+	if err != nil {
+		http.Error(writer, "Error getting posts", http.StatusInternalServerError)
+		log.Println("Error getting posts: ", err)
+		return
+	}
+
+	postsJson, err := json.Marshal(posts)
+	if err != nil {
+		http.Error(writer, "Error encoding response", http.StatusInternalServerError)
+		log.Println("Error encoding response: ", err)
+		return
+	}
+
+	writer.Header().Set("Content-Type", "application/json")
+	writer.WriteHeader(http.StatusOK)
+	writer.Write(postsJson)
 }
 
 func Feed(writer http.ResponseWriter, request *http.Request) {
