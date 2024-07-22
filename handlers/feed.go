@@ -95,12 +95,40 @@ func GetPostsApi(writer http.ResponseWriter, request *http.Request) {
 	writer.Write(postsJson)
 }
 
-func Feed(writer http.ResponseWriter, request *http.Request) {
+func GetPostByIdApi(writer http.ResponseWriter, request *http.Request) {
 	_, err := GetLoggedInUser(request)
 	if err != nil {
 		http.Error(writer, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
 
-	
+	postIdStr := request.URL.Query().Get("id")
+	if postIdStr == "" {
+		http.Error(writer, "Missing id parameter", http.StatusBadRequest)
+		return
+	}
+
+	postId, err := strconv.Atoi(postIdStr)
+	if err != nil {
+		http.Error(writer, "Invalid id parameter", http.StatusBadRequest)
+		return
+	}
+
+	post, err := database.GetPost(postId)
+	if err != nil {
+		http.Error(writer, "Error getting post", http.StatusInternalServerError)
+		log.Println("Error getting post: ", err)
+		return
+	}
+
+	postJson, err := json.Marshal(post)
+	if err != nil {
+		http.Error(writer, "Error encoding response", http.StatusInternalServerError)
+		log.Println("Error encoding response: ", err)
+		return
+	}
+
+	writer.Header().Set("Content-Type", "application/json")
+	writer.WriteHeader(http.StatusOK)
+	writer.Write(postJson)
 }

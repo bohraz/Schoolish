@@ -35,3 +35,13 @@ func GetPosts(amount int) ([]model.Post, error) {
 
 	return posts, nil
 }
+
+func GetPost(id int) (model.Post, error) {
+	var post model.Post
+	err := DB.QueryRow("SELECT * FROM app.posts WHERE postId = ?", id).Scan(&post.Id, &post.Title, &post.Content, &post.UserId, &post.AnswerId)
+	if err != nil {
+		return post, err
+	}
+
+	return post, nil
+}
