@@ -9,9 +9,14 @@
         <p id="content">Content</p>
         
         <div id="comments">
-            <div id="comment">
-
-            </div>
+            <form method="post" id="createCommentForm" onsubmit="submitComment(event)">
+                <input type="text" id="contentInput" name="contentInput" aria-label="commentContent" placeholder="Write a comment/answer.">
+                <button type="submit" id="submit">Submit</button>
+            </form>
+            <!-- <div id="comment{ID}">
+                <h4 class="commentAuthor">Author</h4>
+                <p class="commentContent">Content</p>
+            </div> -->
         </div>
         <script src="/static/script/viewPost.js"></script>
     </body>

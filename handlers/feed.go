@@ -132,3 +132,45 @@ func GetPostByIdApi(writer http.ResponseWriter, request *http.Request) {
 	writer.WriteHeader(http.StatusOK)
 	writer.Write(postJson)
 }
+
+func CreateCommentApi(writer http.ResponseWriter, request *http.Request) {
+	var comment model.Comment
+	err := json.NewDecoder(request.Body).Decode(&comment)
+	if err != nil {
+		http.Error(writer, "Error decoding request", http.StatusBadRequest)
+		log.Println("Error decoding request: ", err)
+		return
+	}
+	
+	session, err := auth.SESSION_STORE.Get(request, "auth-session")
+	if err != nil {
+		http.Error(writer, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	userId := session.Values["userId"].(int)
+	comment.User, err = database.QueryUser(userId)
+	if err != nil {
+		http.Error(writer, "Error querying user", http.StatusInternalServerError)
+		log.Println("Error querying user: ", err)
+		return
+	}
+
+	comment.Id, err = database.CreateComment(comment)
+	if err != nil {
+		http.Error(writer, "Error creating comment", http.StatusInternalServerError)
+		log.Println("Error creating comment: ", err)
+		return
+	} else {
+		responseJson, err := json.Marshal(comment)
+		if err != nil {
+			http.Error(writer, "Error encoding response", http.StatusInternalServerError)
+			log.Println("Error encoding response: ", err)
+			return
+		}
+
+		writer.Header().Set("Content-Type", "application/json")
+		writer.WriteHeader(http.StatusOK)
+		writer.Write(responseJson)
+	}
+}

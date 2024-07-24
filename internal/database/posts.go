@@ -45,3 +45,17 @@ func GetPost(id int) (model.Post, error) {
 
 	return post, nil
 }
+
+func CreateComment(comment model.Comment) (int, error) {
+	result, err := DB.Exec("INSERT INTO app.comments (userId, postId, content) VALUES (?, ?, ?)", comment.User.Id, comment.PostId, comment.Content)
+	if err != nil {
+		return 0, err
+	}
+
+	id, err := result.LastInsertId()
+	if err != nil {
+		return 0, err
+	}
+
+	return int(id), nil
+}

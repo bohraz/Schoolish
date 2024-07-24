@@ -6,8 +6,8 @@ function register(event) {
         username: document.getElementById("username").value,
         password: document.getElementById("password").value,
         email: document.getElementById("email").value,
-        first_name: document.getElementById("first_name").value,
-        last_name: document.getElementById("last_name").value
+        firstName: document.getElementById("firstName").value,
+        lastName: document.getElementById("lastName").value
     };
 
     fetch(url, {

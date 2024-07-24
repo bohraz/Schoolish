@@ -4,8 +4,8 @@ type User struct {
 	Id             int
 	Handle         string `json:"username"`
 	Email          string `json:"email"`
-	FirstName      string `json:"first_name"`
-	LastName       string `json:"last_name"`
+	FirstName      string `json:"firstName"`
+	LastName       string `json:"lastName"`
 	Password       string `json:"password"`
-	HashedPassword string
+	HashedPassword string // Thou shalt not json marshal this field for security reasons
 }
