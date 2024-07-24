@@ -32,11 +32,11 @@ func main() {
 	http.HandleFunc("/signup/", handlers.ServeFileHandler("static/html/register.html"))
 
 	http.HandleFunc("/clubs/", handlers.ClubView)
-	http.HandleFunc("/clubs/create", handlers.ServeFileHandler("static/html/club_create.html"))
+	http.HandleFunc("/clubs/create", handlers.ServeFileHandler("static/html/createClub.html"))
 	http.HandleFunc("/clubs/search/", handlers.ClubSearch)
 	http.HandleFunc("/clubs/join/", handlers.ClubJoin)
 	http.HandleFunc("/clubs/leave/", handlers.ClubLeave)
-	http.Handle("/clubs/edit/", handlers.AuthServeFileHandler("static/html/club_edit.html"))
+	http.Handle("/clubs/edit/", handlers.AuthServeFileHandler("static/html/editClub.html"))
 
 	http.HandleFunc("/api/", handlers.Api)
 
