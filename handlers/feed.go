@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"errors"
 	"log"
 	"net/http"
 	"root/internal/auth"
@@ -131,6 +132,61 @@ func GetPostByIdApi(writer http.ResponseWriter, request *http.Request) {
 	writer.Header().Set("Content-Type", "application/json")
 	writer.WriteHeader(http.StatusOK)
 	writer.Write(postJson)
+}
+
+func getStrAndConvToInt(writer http.ResponseWriter, request *http.Request, key string) (int, error) {
+	str := request.URL.Query().Get(key)
+	if str == "" {
+		http.Error(writer, "Missing "+key+" parameter", http.StatusBadRequest)
+		return 0, errors.New("missing "+key+" parameter")
+	}
+
+	value, err := strconv.Atoi(str)
+	if err != nil {
+		http.Error(writer, "Invalid "+key+" parameter", http.StatusBadRequest)
+		return 0, err
+	}
+
+	return value, nil
+}
+
+func GetCommentsByPostIdApi(writer http.ResponseWriter, request *http.Request) {
+	_, err := GetLoggedInUser(request)
+	if err != nil {
+		http.Error(writer, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	postId, err := getStrAndConvToInt(writer, request, "postId")
+	if err != nil {
+		return
+	}
+	limit, err := getStrAndConvToInt(writer, request, "limit")
+	if err != nil {
+		return
+	}
+	offset, err := getStrAndConvToInt(writer, request, "offset")
+	if err != nil {
+		return
+	}
+
+	comments, err := database.GetCommentsByPostId(postId, limit, offset)
+	if err != nil {
+		http.Error(writer, "Error getting comments", http.StatusInternalServerError)
+		log.Println("Error getting comments: ", err)
+		return
+	}
+
+	commentsJson, err := json.Marshal(comments)
+	if err != nil {
+		http.Error(writer, "Error encoding response", http.StatusInternalServerError)
+		log.Println("Error encoding response: ", err)
+		return
+	}
+
+	writer.Header().Set("Content-Type", "application/json")
+	writer.WriteHeader(http.StatusOK)
+	writer.Write(commentsJson)
 }
 
 func CreateCommentApi(writer http.ResponseWriter, request *http.Request) {

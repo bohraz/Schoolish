@@ -8,6 +8,7 @@ type Post struct {
 	Content  string      `json:"content"`
 	UserId   int         `json:"userId"`
 	AnswerId sql.NullInt64 `json:"answerId"`
+	Comments int 	   `json:"comments"`
 }
 
 type Comment struct {
@@ -16,4 +17,5 @@ type Comment struct {
 	PostId 	int 	`json:"postId"`
 	User 	User 	`json:"user"`
 	Content string 	`json:"content"`
+	ReplyId sql.NullInt64 `json:"replyId"`
 }

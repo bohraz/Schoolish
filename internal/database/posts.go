@@ -37,13 +37,50 @@ func GetPosts(amount int) ([]model.Post, error) {
 }
 
 func GetPost(id int) (model.Post, error) {
+	query := `
+		SELECT app.posts.*, COUNT(app.comments.postId) 
+		FROM app.posts
+		LEFT JOIN app.comments ON app.posts.postId = app.comments.postId
+		WHERE app.posts.postId = ?
+		GROUP BY app.posts.postID
+	`
+
 	var post model.Post
-	err := DB.QueryRow("SELECT * FROM app.posts WHERE postId = ?", id).Scan(&post.Id, &post.Title, &post.Content, &post.UserId, &post.AnswerId)
+	err := DB.QueryRow(query, id).Scan(&post.Id, &post.Title, &post.Content, &post.UserId, &post.AnswerId, &post.Comments)
 	if err != nil {
 		return post, err
 	}
 
 	return post, nil
+}
+
+func GetCommentsByPostId(postId, limit, offset int) ([]model.Comment, error) {
+	query := `
+		SELECT c.*, u.firstName, u.lastName, u.username 
+		FROM app.comments c
+		INNER JOIN app.users u ON c.userId = u.userId
+		WHERE c.postId = ?
+		ORDER BY c.postId ASC
+		LIMIT ? OFFSET ?
+	`
+
+	rows, err := DB.Query(query, postId, limit, offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	comments := make([]model.Comment, 0)
+	for rows.Next() {
+		var comment model.Comment
+		err := rows.Scan(&comment.Id, &comment.Content, &comment.PostId, &comment.User.Id, &comment.ReplyId, &comment.User.FirstName, &comment.User.LastName, &comment.User.Handle)
+		if err != nil {
+			return nil, err
+		}
+		comments = append(comments, comment)
+	}
+
+	return comments, nil
 }
 
 func CreateComment(comment model.Comment) (int, error) {
