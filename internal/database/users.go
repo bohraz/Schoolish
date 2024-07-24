@@ -16,7 +16,6 @@ func QueryUser(identifier interface{}) (model.User, error) {
 	err := DB.QueryRow(query, identifier, identifier).Scan(&user.Id, &user.Handle, &user.HashedPassword, &user.FirstName, &user.LastName, &user.Email)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			log.Println("No rows found!")
 			return user, err
 		}
 		panic(err)
@@ -40,6 +39,9 @@ func GetLoginInfo(username string) (int, string) {
 func UserFound(username, email string) (bool, string) {
 	user, err := QueryUser(username)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return false, ""
+		}
 		log.Println("There was an error querying the user!", err)
 		return false, ""
 	}

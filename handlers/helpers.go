@@ -10,6 +10,10 @@ import (
 	"root/internal/model"
 )
 
+type successResponse struct {
+	Success bool `json:"success"`
+}
+
 func GetLoggedInUser(request *http.Request) (model.User, error) {
 	session, err := auth.SESSION_STORE.Get(request, "auth-session")
 	if err != nil {
@@ -41,4 +45,15 @@ func ServeFileHandler(path string) func(http.ResponseWriter, *http.Request) {
 	
 		http.ServeFile(writer, request, path)
 	}
+}
+
+func removeEmptyStringsFromPath(splitPath *[]string) {
+    for i := 0; i < len(*splitPath); {
+        if (*splitPath)[i] == "" {
+            // Remove the element at index i by appending the elements before i with the elements after i
+            *splitPath = append((*splitPath)[:i], (*splitPath)[i+1:]...)
+        } else {
+            i++
+        }
+    }
 }

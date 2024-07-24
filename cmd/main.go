@@ -22,20 +22,23 @@ func main() {
 	// Registers a handler for /page/ url request and strips /page from url for effective file search
 	http.Handle("/page/", http.StripPrefix("/page", fs))
 
+	// Registers a handler to serve files from the /static/ directory, necessary for html files to load css and js files
+	staticDir := http.Dir("static")
+	staticFS := http.FileServer(staticDir)
+	http.Handle("/static/", http.StripPrefix("/static/", staticFS))
+
 	// Registers predefined function handlers for url requests
 	http.HandleFunc("/login/", handlers.ServeFileHandler("static/html/login.html"))
-	http.HandleFunc("/login/submit/", handlers.LoginSubmit)
-	http.HandleFunc("/signup/", handlers.RegisterForm)
-	http.HandleFunc("/signup/submit/", handlers.RegisterSubmit)
+	http.HandleFunc("/signup/", handlers.ServeFileHandler("static/html/register.html"))
 
 	http.HandleFunc("/clubs/", handlers.ClubView)
-	http.HandleFunc("/clubs/create", handlers.ServeFileHandler("static/html/club_create.html"))
-	http.HandleFunc("/clubs/create/submit/", handlers.ClubCreateSubmit)
+	http.HandleFunc("/clubs/create", handlers.ServeFileHandler("static/html/createClub.html"))
 	http.HandleFunc("/clubs/search/", handlers.ClubSearch)
 	http.HandleFunc("/clubs/join/", handlers.ClubJoin)
 	http.HandleFunc("/clubs/leave/", handlers.ClubLeave)
-	http.HandleFunc("/clubs/edit/", handlers.ClubEdit)
-	http.HandleFunc("/clubs/edit/submit/", handlers.ClubEditSubmit)
+	http.Handle("/clubs/edit/", handlers.AuthServeFileHandler("static/html/editClub.html"))
+
+	http.HandleFunc("/api/", handlers.Api)
 
 	// Registers predefined function handlers for url requests that require a user to be logged in
 	http.Handle("/secret/", handlers.AuthMiddleware(http.HandlerFunc(handlers.SecretHandler)))
