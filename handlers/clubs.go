@@ -143,6 +143,41 @@ func EditClubApi(writer http.ResponseWriter, request *http.Request) {
 	writer.Write(responseJson)
 }
 
+func clubEdit(writer http.ResponseWriter, request *http.Request) error {
+	clubId, err := getClubIdFromUrl(writer, request)
+	if err != nil {
+		log.Println(err)
+		writer.WriteHeader(http.StatusBadRequest)
+		return err
+	}
+
+	updatedClub := model.Club{ID: clubId}
+	err = json.NewDecoder(request.Body).Decode(&updatedClub)
+	if err != nil {
+		http.Error(writer, "Error decoding request", http.StatusBadRequest)
+		return err
+	}
+
+	err = database.UpdateClub(updatedClub)
+	if err != nil {
+		http.Error(writer, "Error updating club", http.StatusInternalServerError)
+		return err
+	}
+
+	response := successResponse{Success: true}
+	responseJson, err := json.Marshal(response)
+	if err != nil {
+		http.Error(writer, "Error encoding response", http.StatusInternalServerError)
+		return err
+	}
+
+	writer.Header().Set("Content-Type", "application/json")
+	writer.WriteHeader(http.StatusOK)
+	writer.Write(responseJson)
+
+	return nil
+}
+
 func ClubView(writer http.ResponseWriter, request *http.Request) {
 	user, err := GetLoggedInUser(request)
 	if err != nil {
