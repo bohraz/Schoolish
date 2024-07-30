@@ -2,6 +2,23 @@ const feed = document.getElementById("feed");
 var unloadedPosts = [];
 var looping = false;
 
+const socket = new WebSocket("ws://127.0.0.1:80/ws/feed")
+
+// Connection opened
+socket.addEventListener("open", function (event) {
+    console.log("Connected to WebSocket server");
+});
+
+// Listen for messages
+socket.addEventListener("message", function (event) {
+    console.log("Message from server ", event.data);
+});
+
+// Connection closed
+socket.addEventListener("close", function (event) {
+    console.log("Disconnected from WebSocket server");
+});
+
 function createPost(event) {
     event.preventDefault();
 

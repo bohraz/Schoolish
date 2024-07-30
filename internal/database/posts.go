@@ -1,6 +1,8 @@
 package database
 
-import "root/internal/model"
+import (
+	"root/internal/model"
+)
 
 func CreatePost(post model.Post) (int, error) {
 	result, err := DB.Exec("INSERT INTO app.posts (title, content, userId) VALUES (?, ?, ?)", post.Title, post.Content, post.UserId)
@@ -93,6 +95,13 @@ func CreateComment(comment model.Comment) (int, error) {
 	if err != nil {
 		return 0, err
 	}
+
+	post, err := GetPost(comment.PostId)
+	if err != nil {
+		return 0, err
+	}
+
+	model.PostsBroadcast <- post
 
 	return int(id), nil
 }

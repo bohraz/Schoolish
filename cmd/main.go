@@ -46,6 +46,11 @@ func main() {
 	router.HandleFunc("/api/comment/create/", handlers.CreateCommentApi).Methods("POST")
 	router.HandleFunc("/api/comment", handlers.GetCommentsByPostIdApi).Methods("GET")
 
+	router.HandleFunc("/ws/feed", handlers.FeedChangedApi)
+	router.HandleFunc("/ws/post", handlers.PostChangedApi)
+
+	go handlers.HandlePostChanged()
+
 	// Including 127.0.0.1 before port :80 prevents from os requesting permission before every run
 	err := http.ListenAndServe("127.0.0.1:80", router)
 	if err != nil {

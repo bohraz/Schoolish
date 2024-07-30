@@ -1,232 +1,111 @@
 package handlers
 
 import (
-	"encoding/json"
-	"errors"
 	"log"
 	"net/http"
-	"root/internal/auth"
-	"root/internal/database"
 	"root/internal/model"
-	"strconv"
+
+	"github.com/gorilla/websocket"
 )
 
-// On scroll down get and display next x posts
-// If scrolling fast show grey (unloaded) posts, counting how many were scrolled through
-// 	On scrolling slow, load visible posts
-// 	Then load the posts that were greyed out from closest to current post to furthest (FILO?)
+var (
+	feedUpgrader = websocket.Upgrader{
+		ReadBufferSize:  1024,
+		WriteBufferSize: 1024,
+		CheckOrigin: func(r *http.Request) bool {
+			// Allow all connections by returning true
+			return true
+		},
+	}
 
-// Step 1 is to develop the above
-// Step 2 is to convert it to websocket and have a post feed that updates in real time
-// Keep in mind twitter-type feed view meaning only comment count shown from feed view
+	postUpgrader = websocket.Upgrader{
+		ReadBufferSize:  1024,
+		WriteBufferSize: 1024,
+		CheckOrigin: func(r *http.Request) bool {
+			// Allow all connections by returning true
+			return true
+		},
+	}
 
-func CreatePostApi(writer http.ResponseWriter, request *http.Request) {
-	var post model.Post
-	err := json.NewDecoder(request.Body).Decode(&post)
+	feedClients = make(map[*websocket.Conn]bool)
+	postClients = make(map[int][]*websocket.Conn)
+)
+
+func FeedChangedApi(writer http.ResponseWriter, request *http.Request) {
+	ws, err := feedUpgrader.Upgrade(writer, request, nil)
 	if err != nil {
-		http.Error(writer, "Error decoding request", http.StatusBadRequest)
+		log.Println(err)
+		return
+	}
+	defer ws.Close()
+
+	feedClients[ws] = true
+
+	for {
+		_, _, err := ws.ReadMessage()
+		if err != nil {
+			log.Println(err)
+			delete(feedClients, ws)
+			break
+		}
+	}
+}
+
+func PostChangedApi(writer http.ResponseWriter, request *http.Request) {
+	ws, err := postUpgrader.Upgrade(writer, request, nil)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	defer ws.Close()
+
+	postId, err := getStrAndConvToInt(writer, request, "id")
+	if err != nil {
 		return
 	}
 	
-	session, err := auth.SESSION_STORE.Get(request, "auth-session")
-	if err != nil {
-		http.Error(writer, "Unauthorized", http.StatusUnauthorized)
-		return
-	}
+	postClients[postId] = append(postClients[postId], ws)
 
-	userId := session.Values["userId"].(int)
-	post.UserId = userId
-
-	post.Id, err = database.CreatePost(post)
-	if err != nil {
-		http.Error(writer, "Error creating post", http.StatusInternalServerError)
-		log.Println("Error creating post: ", err)
-		return
-	} else {
-		response := successResponse{Success: true, Id: post.Id}
-		responseJson, err := json.Marshal(response)
+	for {
+		_, _, err := ws.ReadMessage()
 		if err != nil {
-			http.Error(writer, "Error encoding response", http.StatusInternalServerError)
-			log.Println("Error encoding response: ", err)
-			return
+			log.Println(err)
+			removePostClient(ws, postId)
+			break
+		}
+	}
+}
+
+func removePostClient(ws *websocket.Conn, postId int) {
+	clients := postClients[postId]
+	for i, client := range postClients[postId] {
+		if client == ws {
+			postClients[postId] = append(clients[:i], clients[i+1:]...)
+			break
+		}
+	}
+}
+
+func HandlePostChanged() {
+	for {
+		post := <-model.PostsBroadcast
+		for client := range feedClients {
+			err := client.WriteJSON(post)
+			if err != nil {
+				log.Printf("error: %v", err)
+				client.Close()
+				delete(feedClients, client)
+			}
 		}
 
-		writer.Header().Set("Content-Type", "application/json")
-		writer.WriteHeader(http.StatusOK)
-		writer.Write(responseJson)
-	
-	}
-}
 
-func GetPostsApi(writer http.ResponseWriter, request *http.Request) {
-	_, err := GetLoggedInUser(request)
-	if err != nil {
-		http.Error(writer, "Unauthorized", http.StatusUnauthorized)
-		return
-	}
-
-	amountStr := request.URL.Query().Get("amount")
-    if amountStr == "" {
-        http.Error(writer, "Missing amount parameter", http.StatusBadRequest)
-        return
-    }
-
-	amount, err := strconv.Atoi(amountStr)
-	if err != nil {
-		http.Error(writer, "Invalid amount parameter", http.StatusBadRequest)
-		return
-	}
-
-	posts, err := database.GetPosts(amount)
-	if err != nil {
-		http.Error(writer, "Error getting posts", http.StatusInternalServerError)
-		log.Println("Error getting posts: ", err)
-		return
-	}
-
-	postsJson, err := json.Marshal(posts)
-	if err != nil {
-		http.Error(writer, "Error encoding response", http.StatusInternalServerError)
-		log.Println("Error encoding response: ", err)
-		return
-	}
-
-	writer.Header().Set("Content-Type", "application/json")
-	writer.WriteHeader(http.StatusOK)
-	writer.Write(postsJson)
-}
-
-func GetPostByIdApi(writer http.ResponseWriter, request *http.Request) {
-	_, err := GetLoggedInUser(request)
-	if err != nil {
-		http.Error(writer, "Unauthorized", http.StatusUnauthorized)
-		return
-	}
-
-	postIdStr := request.URL.Query().Get("id")
-	if postIdStr == "" {
-		http.Error(writer, "Missing id parameter", http.StatusBadRequest)
-		return
-	}
-
-	postId, err := strconv.Atoi(postIdStr)
-	if err != nil {
-		http.Error(writer, "Invalid id parameter", http.StatusBadRequest)
-		return
-	}
-
-	post, err := database.GetPost(postId)
-	if err != nil {
-		http.Error(writer, "Error getting post", http.StatusInternalServerError)
-		log.Println("Error getting post: ", err)
-		return
-	}
-
-	postJson, err := json.Marshal(post)
-	if err != nil {
-		http.Error(writer, "Error encoding response", http.StatusInternalServerError)
-		log.Println("Error encoding response: ", err)
-		return
-	}
-
-	writer.Header().Set("Content-Type", "application/json")
-	writer.WriteHeader(http.StatusOK)
-	writer.Write(postJson)
-}
-
-func getStrAndConvToInt(writer http.ResponseWriter, request *http.Request, key string) (int, error) {
-	str := request.URL.Query().Get(key)
-	if str == "" {
-		http.Error(writer, "Missing "+key+" parameter", http.StatusBadRequest)
-		return 0, errors.New("missing "+key+" parameter")
-	}
-
-	value, err := strconv.Atoi(str)
-	if err != nil {
-		http.Error(writer, "Invalid "+key+" parameter", http.StatusBadRequest)
-		return 0, err
-	}
-
-	return value, nil
-}
-
-func GetCommentsByPostIdApi(writer http.ResponseWriter, request *http.Request) {
-	_, err := GetLoggedInUser(request)
-	if err != nil {
-		http.Error(writer, "Unauthorized", http.StatusUnauthorized)
-		return
-	}
-
-	postId, err := getStrAndConvToInt(writer, request, "postId")
-	if err != nil {
-		return
-	}
-	limit, err := getStrAndConvToInt(writer, request, "limit")
-	if err != nil {
-		return
-	}
-	offset, err := getStrAndConvToInt(writer, request, "offset")
-	if err != nil {
-		return
-	}
-
-	comments, err := database.GetCommentsByPostId(postId, limit, offset)
-	if err != nil {
-		http.Error(writer, "Error getting comments", http.StatusInternalServerError)
-		log.Println("Error getting comments: ", err)
-		return
-	}
-
-	commentsJson, err := json.Marshal(comments)
-	if err != nil {
-		http.Error(writer, "Error encoding response", http.StatusInternalServerError)
-		log.Println("Error encoding response: ", err)
-		return
-	}
-
-	writer.Header().Set("Content-Type", "application/json")
-	writer.WriteHeader(http.StatusOK)
-	writer.Write(commentsJson)
-}
-
-func CreateCommentApi(writer http.ResponseWriter, request *http.Request) {
-	var comment model.Comment
-	err := json.NewDecoder(request.Body).Decode(&comment)
-	if err != nil {
-		http.Error(writer, "Error decoding request", http.StatusBadRequest)
-		log.Println("Error decoding request: ", err)
-		return
-	}
-	
-	session, err := auth.SESSION_STORE.Get(request, "auth-session")
-	if err != nil {
-		http.Error(writer, "Unauthorized", http.StatusUnauthorized)
-		return
-	}
-
-	userId := session.Values["userId"].(int)
-	comment.User, err = database.QueryUser(userId)
-	if err != nil {
-		http.Error(writer, "Error querying user", http.StatusInternalServerError)
-		log.Println("Error querying user: ", err)
-		return
-	}
-
-	comment.Id, err = database.CreateComment(comment)
-	if err != nil {
-		http.Error(writer, "Error creating comment", http.StatusInternalServerError)
-		log.Println("Error creating comment: ", err)
-		return
-	} else {
-		responseJson, err := json.Marshal(comment)
-		if err != nil {
-			http.Error(writer, "Error encoding response", http.StatusInternalServerError)
-			log.Println("Error encoding response: ", err)
-			return
+		for _, client := range postClients[post.Id] {
+			err := client.WriteJSON(post)
+			if err != nil {
+				log.Printf("error: %v", err)
+				client.Close()
+				removePostClient(client, post.Id)
+			}
 		}
-
-		writer.Header().Set("Content-Type", "application/json")
-		writer.WriteHeader(http.StatusOK)
-		writer.Write(responseJson)
 	}
 }

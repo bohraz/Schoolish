@@ -2,6 +2,8 @@ package model
 
 import "database/sql"
 
+var PostsBroadcast = make(chan Post)
+
 type Post struct {
 	Id       int
 	Title    string      `json:"title"`
