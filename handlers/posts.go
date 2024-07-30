@@ -70,17 +70,7 @@ func PostChangedApi(writer http.ResponseWriter, request *http.Request) {
 		_, _, err := ws.ReadMessage()
 		if err != nil {
 			log.Println(err)
-			removePostClient(ws, postId)
-			break
-		}
-	}
-}
-
-func removePostClient(ws *websocket.Conn, postId int) {
-	clients := postClients[postId]
-	for i, client := range postClients[postId] {
-		if client == ws {
-			postClients[postId] = append(clients[:i], clients[i+1:]...)
+			removePostClient(ws, postId, postClients)
 			break
 		}
 	}
@@ -98,13 +88,12 @@ func HandlePostChanged() {
 			}
 		}
 
-
 		for _, client := range postClients[post.Id] {
 			err := client.WriteJSON(post)
 			if err != nil {
 				log.Printf("error: %v", err)
 				client.Close()
-				removePostClient(client, post.Id)
+				removePostClient(client, post.Id, postClients)
 			}
 		}
 	}

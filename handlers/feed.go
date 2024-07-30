@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"encoding/json"
-	"errors"
 	"log"
 	"net/http"
 	"root/internal/auth"
@@ -134,22 +133,6 @@ func GetPostByIdApi(writer http.ResponseWriter, request *http.Request) {
 	writer.Write(postJson)
 }
 
-func getStrAndConvToInt(writer http.ResponseWriter, request *http.Request, key string) (int, error) {
-	str := request.URL.Query().Get(key)
-	if str == "" {
-		http.Error(writer, "Missing "+key+" parameter", http.StatusBadRequest)
-		return 0, errors.New("missing "+key+" parameter")
-	}
-
-	value, err := strconv.Atoi(str)
-	if err != nil {
-		http.Error(writer, "Invalid "+key+" parameter", http.StatusBadRequest)
-		return 0, err
-	}
-
-	return value, nil
-}
-
 func GetCommentsByPostIdApi(writer http.ResponseWriter, request *http.Request) {
 	_, err := GetLoggedInUser(request)
 	if err != nil {
@@ -206,6 +189,7 @@ func CreateCommentApi(writer http.ResponseWriter, request *http.Request) {
 
 	userId := session.Values["userId"].(int)
 	comment.User, err = database.QueryUser(userId)
+	comment.User.HashedPassword = ""
 	if err != nil {
 		http.Error(writer, "Error querying user", http.StatusInternalServerError)
 		log.Println("Error querying user: ", err)

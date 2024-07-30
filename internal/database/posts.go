@@ -48,7 +48,7 @@ func GetPost(id int) (model.Post, error) {
 	`
 
 	var post model.Post
-	err := DB.QueryRow(query, id).Scan(&post.Id, &post.Title, &post.Content, &post.UserId, &post.AnswerId, &post.Comments)
+	err := DB.QueryRow(query, id).Scan(&post.Id, &post.Title, &post.Content, &post.UserId, &post.AnswerId, &post.CommentCount)
 	if err != nil {
 		return post, err
 	}
@@ -95,6 +95,7 @@ func CreateComment(comment model.Comment) (int, error) {
 	if err != nil {
 		return 0, err
 	}
+	comment.Id = int(id)
 
 	post, err := GetPost(comment.PostId)
 	if err != nil {
@@ -102,6 +103,7 @@ func CreateComment(comment model.Comment) (int, error) {
 	}
 
 	model.PostsBroadcast <- post
+	model.CommentBroadcast <- comment
 
 	return int(id), nil
 }

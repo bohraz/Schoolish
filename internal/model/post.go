@@ -3,6 +3,7 @@ package model
 import "database/sql"
 
 var PostsBroadcast = make(chan Post)
+var CommentBroadcast = make(chan Comment)
 
 type Post struct {
 	Id       int
@@ -10,7 +11,8 @@ type Post struct {
 	Content  string      `json:"content"`
 	UserId   int         `json:"userId"`
 	AnswerId sql.NullInt64 `json:"answerId"`
-	Comments int 	   `json:"comments"`
+	Comments []Comment     `json:"comments"`
+	CommentCount int 	   `json:"commentCount"`
 }
 
 type Comment struct {

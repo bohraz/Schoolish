@@ -8,6 +8,9 @@ import (
 	"root/internal/auth"
 	"root/internal/database"
 	"root/internal/model"
+	"strconv"
+
+	"github.com/gorilla/websocket"
 )
 
 type successResponse struct {
@@ -57,4 +60,30 @@ func removeEmptyStringsFromPath(splitPath *[]string) {
             i++
         }
     }
+}
+
+func removePostClient(ws *websocket.Conn, postId int, slice map[int][]*websocket.Conn) {
+	clients := slice[postId]
+	for i, client := range slice[postId] {
+		if client == ws {
+			slice[postId] = append(clients[:i], clients[i+1:]...)
+			break
+		}
+	}
+}
+
+func getStrAndConvToInt(writer http.ResponseWriter, request *http.Request, key string) (int, error) {
+	str := request.URL.Query().Get(key)
+	if str == "" {
+		http.Error(writer, "Missing "+key+" parameter", http.StatusBadRequest)
+		return 0, errors.New("missing "+key+" parameter")
+	}
+
+	value, err := strconv.Atoi(str)
+	if err != nil {
+		http.Error(writer, "Invalid "+key+" parameter", http.StatusBadRequest)
+		return 0, err
+	}
+
+	return value, nil
 }

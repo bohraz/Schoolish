@@ -48,8 +48,10 @@ func main() {
 
 	router.HandleFunc("/ws/feed", handlers.FeedChangedApi)
 	router.HandleFunc("/ws/post", handlers.PostChangedApi)
+	router.HandleFunc("/ws/comment", handlers.CommentChangedApi)
 
 	go handlers.HandlePostChanged()
+	go handlers.HandleCommentChanged()
 
 	// Including 127.0.0.1 before port :80 prevents from os requesting permission before every run
 	err := http.ListenAndServe("127.0.0.1:80", router)

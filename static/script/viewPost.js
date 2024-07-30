@@ -1,18 +1,24 @@
-const socket = new WebSocket("ws://127.0.0.1:80/ws/post?id=" + window.location.pathname.split("/")[2]);
+const postId = window.location.pathname.split("/")[2];
+const wsUrl = "ws://127.0.0.1:80/ws/";
+const sockets = [wsUrl + "post?id=" + postId, wsUrl + "comment?id=" + postId];
 
-// Connection opened
-socket.addEventListener("open", function (event) {
-    console.log("Connected to WebSocket server");
-});
+sockets.forEach(v => {
+    const socket = new WebSocket(v);
 
-// Listen for messages
-socket.addEventListener("message", function (event) {
-    console.log("Message from server ", event.data);
-});
+    // Connection opened
+    socket.addEventListener("open", function (event) {
+        console.log("Connected to WebSocket server");
+    });
 
-// Connection closed
-socket.addEventListener("close", function (event) {
-    console.log("Disconnected from WebSocket server");
+    // Listen for messages
+    socket.addEventListener("message", function (event) {
+        console.log("Message from server ", event.data);
+    });
+
+    // Connection closed
+    socket.addEventListener("close", function (event) {
+        console.log("Disconnected from WebSocket server");
+    });
 });
 
 
