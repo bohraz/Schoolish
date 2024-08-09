@@ -10,12 +10,9 @@ import (
 	"root/internal/model"
 	"strconv"
 	"strings"
-)
 
-func init() {
-	ApiHandlers["clubCreate"] = clubCreate
-	ApiHandlers["clubEdit"] = clubEdit
-}
+	"github.com/gorilla/mux"
+)
 
 var ErrNotAClubUrl = errors.New("this is not a club url or there is no clubid")
 
@@ -59,10 +56,10 @@ func getClubIdFromUrl(writer http.ResponseWriter, request *http.Request) (int, e
 }
 
 func getClubFromUrl(writer http.ResponseWriter, request *http.Request) (model.Club) {
-	clubId, err := getClubIdFromUrl(writer, request)
+	clubIdStr := mux.Vars(request)["id"]
+	clubId, err := strconv.Atoi(clubIdStr)
 	if err != nil {
-		log.Println(err)
-		writer.WriteHeader(http.StatusBadRequest)
+		http.Error(writer, "Invalid club ID", http.StatusBadRequest)
 		return model.Club{}
 	}
 
@@ -75,26 +72,26 @@ func getClubFromUrl(writer http.ResponseWriter, request *http.Request) (model.Cl
 	return club
 }
 
-func clubCreate(writer http.ResponseWriter, request *http.Request) error {
+func CreateClubApi(writer http.ResponseWriter, request *http.Request) {
 	user, err := GetLoggedInUser(request)
 	if err != nil {
 		http.Error(writer, "Unauthorized", http.StatusUnauthorized)
 		log.Println(err)
-		return err
+		return
 	}
 
 	var createRequest model.Club
 	err = json.NewDecoder(request.Body).Decode(&createRequest)
 	if err != nil {
 		http.Error(writer, err.Error(), http.StatusBadRequest)
-		return err
+		return
 	}
 
 
 	clubId, err := database.CreateClub(createRequest.Name, createRequest.Description, user.Id)
 	if err != nil {
 		http.Error(writer, "Error creating club", http.StatusInternalServerError)
-		return err
+		return
 	}
 
 	response := model.Club{
@@ -105,14 +102,45 @@ func clubCreate(writer http.ResponseWriter, request *http.Request) error {
 	responseJson, err := json.Marshal(response)
 	if err != nil {
 		http.Error(writer, "Error encoding response", http.StatusInternalServerError)
-		return err
+		return
 	}
 
 	writer.Header().Set("Content-Type", "application/json")
 	writer.WriteHeader(http.StatusOK)
 	writer.Write(responseJson)
+}
 
-	return nil
+func EditClubApi(writer http.ResponseWriter, request *http.Request) {
+	clubId, err := getClubIdFromUrl(writer, request)
+	if err != nil {
+		log.Println(err)
+		writer.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	updatedClub := model.Club{ID: clubId}
+	err = json.NewDecoder(request.Body).Decode(&updatedClub)
+	if err != nil {
+		http.Error(writer, "Error decoding request", http.StatusBadRequest)
+		return
+	}
+
+	err = database.UpdateClub(updatedClub)
+	if err != nil {
+		http.Error(writer, "Error updating club", http.StatusInternalServerError)
+		return
+	}
+
+	response := successResponse{Success: true}
+	responseJson, err := json.Marshal(response)
+	if err != nil {
+		http.Error(writer, "Error encoding response", http.StatusInternalServerError)
+		return
+	}
+
+	writer.Header().Set("Content-Type", "application/json")
+	writer.WriteHeader(http.StatusOK)
+	writer.Write(responseJson)
 }
 
 func clubEdit(writer http.ResponseWriter, request *http.Request) error {

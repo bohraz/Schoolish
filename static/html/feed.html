@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Feed</title>
+</head>
+<body>
+    <h1>Feed</h1>
+    <div>
+        <h2>Create Post</h2>
+        <form method="post" id="createPost" onsubmit="createPost(event)">
+            <input type="text" id="title" name="title" aria-label="Title" placeholder="Title" required>
+            <textarea id="content" name="content" rows="4" aria-label="Content" placeholder="Content" required></textarea>
+            <button type="submit">Post</button>
+        </form>
+    </div>
+    <div id="feed" class="feedContainer">
+        <h2>Feed</h2>
+        <div>
+            <!-- Feed content will be displayed here -->
+            <div class="post">
+                <h3>Post Title</h3>
+                <h4>Post Author</h4>
+                <p>Post Content</p>
+            </div>
+        </div>
+    </div>
+    <script src="/static/script/feed.js"></script>
+</body>
+</html>

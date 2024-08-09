@@ -2,8 +2,8 @@ function edit(event) {
     event.preventDefault();
 
     const path = window.location.pathname;
-    const clubId = path.split("/")[3];
-    const url = `/api/club/edit/${clubId}`;
+    const clubId = path.split("/")[2];
+    const url = `/api/club/${clubId}/edit/`;
 
     const data = {
         id: clubId,
